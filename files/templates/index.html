@@ -16,7 +16,7 @@
   <ul id="attachments" class="list-group">
     {% for attachment in attachments %}
       <li class="list-group-item">
-        <a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a>
+        <a href="{{ attachment.signed_url }}" target="_blank">{{ attachment.filename }}</a>
       </li>
     {% endfor %}
   </ul>

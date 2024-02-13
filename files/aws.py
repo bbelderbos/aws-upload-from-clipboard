@@ -57,7 +57,6 @@ def upload_to_s3(file, acl=DEFAULT_ACL, bucket=None, region=None):
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        # region_name=region,
         config=config
     )
     response = s3.Bucket(bucket).put_object(
