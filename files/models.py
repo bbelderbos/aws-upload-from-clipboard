@@ -16,3 +16,7 @@ class Attachment(models.Model):
     def signed_url(self):
         object_name = os.path.basename(self.url)
         return create_presigned_url(object_name)
+
+    @property
+    def filename(self):
+        return os.path.basename(self.url)

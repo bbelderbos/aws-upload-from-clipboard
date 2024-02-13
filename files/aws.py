@@ -25,7 +25,12 @@ def create_presigned_url(
         signature_version="s3v4",
         s3={"addressing_style": "virtual"},
     )
-    s3_client = boto3.client("s3", config=config)
+    s3_client = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        config=config
+    )
     try:
         logging.info(f"{bucket=}, {object_name=}")
         url = s3_client.generate_presigned_url(
@@ -40,7 +45,7 @@ def create_presigned_url(
     return url
 
 
-def upload_to_s3(file, content_id, acl=DEFAULT_ACL, bucket=None, region=None):
+def upload_to_s3(file, acl=DEFAULT_ACL, bucket=None, region=None):
     if bucket is None:
         bucket = settings.AWS_S3_BUCKET
 
@@ -48,10 +53,15 @@ def upload_to_s3(file, content_id, acl=DEFAULT_ACL, bucket=None, region=None):
         region = settings.AWS_REGION
 
     config = Config(region_name=region)
-    s3 = boto3.resource("s3", config=config)
-    filename = f"{content_id}_{file.name}"
+    s3 = boto3.resource(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        # region_name=region,
+        config=config
+    )
     response = s3.Bucket(bucket).put_object(
-        Key=filename, Body=file.file, ACL=acl
+        Key=file.name, Body=file.file, ACL=acl
     )
 
     url = f"https://{bucket}.s3.{region}.amazonaws.com/{response.key}"

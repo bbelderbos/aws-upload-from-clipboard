@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload From Clipboard Example</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+
+  <h1>File Upload From Clipboard Example</h1>
+
+  <p>Copy a file to your clipboard and paste it here (control + v).</p>
+
+  <ul id="attachments">
+    {% for attachment in attachments %}
+      <li class="list-group-item">
+        <a href="{{ attachment.url }}" target="_blank">{{ attachment.filename }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <script type="text/javascript">
+    document.onpaste = function(event) {
+      let items = (event.clipboardData || event.originalEvent.clipboardData).items;
+
+      let files = [];
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        if (item.kind === 'file') {
+          let file = item.getAsFile();
+          if(file !== null) { // Ensure it's a file
+            files.push(file);
+          }
+        }
+      }
+
+      if(files.length > 0) {
+        let filenames = files.map(function(file) {
+          return file.name;
+        }).join("\n- ");
+
+        let msg = "You are about to attach the following files:\n\n- " + filenames;
+        msg += "\n\nProceed?";
+        if (confirm(msg)) {
+          uploadFileWithFetch(files);
+        }
+      }
+    }
+
+    function uploadFileWithFetch(files) {
+      let formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('file', files[i]);
+      }
+
+      const csrftoken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      fetch('./upload', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': csrftoken,
+        },
+        credentials: 'same-origin' // Include cookies in the request if needed
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json(); // or .text() if the response is not JSON
+      })
+      .then(res => {
+        res.urls.forEach(row => {
+          let elem = document.createElement('li');
+          elem.className = 'list-group-item';
+          elem.innerHTML = `<a href="${row.url}" target="_blank">${row.filename}</a>`;
+          document.getElementById('attachments').appendChild(elem);
+        });
+      })
+      .catch(error => {
+        console.error('There has been a problem with your fetch operation:', error);
+        alert(error.message);
+      });
+    }
+  </script>
+
+</body>
+</html>
